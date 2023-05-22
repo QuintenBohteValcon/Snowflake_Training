@@ -34,7 +34,6 @@ def Transformations(df, country_list):
 
     df_pivot = df_pivot.select(df_pivot.col("COUNTRY_NAME"), \
                             df_pivot.col("Indicator_Name"), \
-                            df_pivot.columns()
                             df_pivot.col("Value").cast(tp.DecimalType(15,2)).name("Value"), \
                             df_pivot.col("Year").substr(6,4).name("Year"))
 
