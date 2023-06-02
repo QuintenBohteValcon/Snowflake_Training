@@ -30,22 +30,45 @@ def create_session():
 
 def Transformations(GDP, Currency, country_list):
 
+
+    #Unpivot the GDP table
     GDP_up = GDP.unpivot("Value", "Year", GDP.columns[3:25]).filter(fc.in_([GDP.col("COUNTRY_NAME")], country_list))
 
+    #select all necessary columns
     GDP_up = GDP_up.select(GDP_up.col("COUNTRY_NAME"), \
                             GDP_up.col("Indicator_Name"), \
                             GDP_up.col("Value").cast(tp.DecimalType(15,2)).name("Value"), \
                             GDP_up.col("Year").substr(6,4).name("Year"))
+    
+    #select all columns + select only year from yearmonthid for group by
+    Currency_year = Currency.select(fc.left(Currency.YEARMONTHID.cast(tp.StringType()), 4).name("Year"), 
+                                Currency.CurrencyID,
+                                Currency.CurrencyRate).filter(Currency.CurrencyID == "USD")
+                        
 
+    #group by year and compute average currency rate per year
+    Currency_year = Currency_year.group_by(Currency_year.year, 
+                                        Currency_year.CurrencyID) \
+                                .agg(fc.avg(Currency_year.CurrencyRate).name("CurrencyRate")).order_by(Currency_year.year)
 
+    #join currency year on GDP_Data and convert dollars to euro's
+    GDP_Data = GDP_up.join(Currency_year, 
+                        GDP_up.year == Currency_year.year)\
+                    .select(GDP_up.year.name("Year"),
+                            GDP_up.country_name.name("Country"),
+                            GDP_up.value,
+                            Currency_year.CurrencyRate,
+                            fc.lit("EUR").name('Currency')
+                    )\
+                    .withColumn('Value_Euro', GDP_up.value / Currency_year.CurrencyRate)
+    
+    #select columns
+    GDP_Data = GDP_Data.select(GDP_Data.year,
+                            GDP_Data.country,
+                            GDP_Data.Value_Euro,
+                            GDP_Data.Currency)
 
-
-
-    df_pivot = df_pivot.with_column("Value_Euro", )
-
-    return df_pivot
-
-
+    return GDP_Data
 
 def Write_df_to_SF(df, Table_Name):
 
@@ -54,49 +77,17 @@ def Write_df_to_SF(df, Table_Name):
 
 #%%
 New_Session = create_session()
-
 GDP = New_Session.table("Raw_GDP_Data")
 Currency = New_Session.table("FactCurrencyRates")
+country_list = ["Netherlands", 'Poland', 'Italy', 'Sweden', 'United Kingdom']
 
-Currency.show()
-#%%
+GDP_Data = Transformations(GDP, Currency, country_list)
 
-country_list = ["Netherlands", 'Poland', 'Italy']
-
-
-GDP_up = GDP.unpivot("Value", "Year", GDP.columns[3:25]).filter(fc.in_([GDP.col("COUNTRY_NAME")], country_list))
-
-
-GDP_up = GDP_up.select(GDP_up.col("COUNTRY_NAME"), \
-                        GDP_up.col("Indicator_Name"), \
-                        GDP_up.col("Value").cast(tp.DecimalType(15,2)).name("Value"), \
-                        GDP_up.col("Year").substr(6,4).name("Year"))
-
-
-Currency_year = Currency.select(Currency.YEARMONTHID).cast()
-
-group_by(fc.year(Currency.col("Year")).name("year"), \
-                                  Currency.CURRENCYID,)  \
-                        .avg(fc.sum(Currency.col("CURRENCYRATE")).name("CURRENCYRATE"))
-
-
-Currency_year.show()
-
-#%%
-
-
-df_pivot = df_pivot.with_column("Value_Euro", )
-
-df = Transformations(df, country_list)
-
-Write_df_to_SF(df, 'GDP_Data')
+Write_df_to_SF(GDP_Data, 'GDP_Data')
 
 
 
 #%%
-
-
-
 
 # The Snowpark package is required for Python Worksheets. 
 # You can add more packages by selecting them using the Packages control and then importing them.
@@ -112,17 +103,46 @@ from snowflake.snowpark import types as tp
 from snowflake.snowpark.functions import col
 
 
-
-def Transformations(df, country_list):
+def Transformations(GDP, Currency , country_list):
     
-    df = df.unpivot("Value", "Year", df.columns[3:25]).filter(fc.in_([df.col("COUNTRY_NAME")], country_list))
+    #Unpivot the GDP table
+    GDP_up = GDP.unpivot("Value", "Year", GDP.columns[3:25]).filter(fc.in_([GDP.col("COUNTRY_NAME")], country_list))
 
-    df = df.select(df.col("COUNTRY_NAME"), \
-                            df.col("Indicator_Name"), \
-                            df.col("Value").cast(tp.DecimalType(15,2)).name("Value"), \
-                            df.col("Year").substr(6,4).name("Year"))
-    return df
+    #select all necessary columns
+    GDP_up = GDP_up.select(GDP_up.col("COUNTRY_NAME"), \
+                            GDP_up.col("Indicator_Name"), \
+                            GDP_up.col("Value").cast(tp.DecimalType(15,2)).name("Value"), \
+                            GDP_up.col("Year").substr(6,4).name("Year"))
+    
+    #select all columns + select only year from yearmonthid for group by
+    Currency_year = Currency.select(fc.left(Currency.YEARMONTHID.cast(tp.StringType()), 4).name("Year"), 
+                                Currency.CurrencyID,
+                                Currency.CurrencyRate).filter(Currency.CurrencyID == "USD")
+                        
 
+    #group by year and compute average currency rate per year
+    Currency_year = Currency_year.group_by(Currency_year.year, 
+                                        Currency_year.CurrencyID) \
+                                .agg(fc.avg(Currency_year.CurrencyRate).name("CurrencyRate")).order_by(Currency_year.year)
+
+    #join currency year on GDP_Data and convert dollars to euro's
+    GDP_Data = GDP_up.join(Currency_year, 
+                        GDP_up.year == Currency_year.year)\
+                    .select(GDP_up.year.name("Year"),
+                            GDP_up.country_name.name("Country"),
+                            GDP_up.value,
+                            Currency_year.CurrencyRate,
+                            fc.lit("EUR").name('Currency')
+                    )\
+                    .withColumn('Value_Euro', GDP_up.value / Currency_year.CurrencyRate)
+    
+    #select columns
+    GDP_Data = GDP_Data.select(GDP_Data.year,
+                            GDP_Data.country,
+                            GDP_Data.Value_Euro,
+                            GDP_Data.Currency)
+
+    return GDP_Data
 
 
 def Write_df_to_SF(df, Table_Name):
@@ -132,17 +152,14 @@ def Write_df_to_SF(df, Table_Name):
 
 def main(session: snowpark.Session): 
     
-    dataframe = session.table('SNOWFLAKE_BURST.RAW_DATA.RAW_GDP_DATA')
-
-    dataframe.show()
+    GDP = session.table("SNOWFLAKE_BURST.RAW_DATA.RAW_GDP_DATA")
     
-    country_list = ["Netherlands", 'Poland', 'Italy']
+    Currency = session.table("SNOWFLAKE_BURST.RAW_DATA.FACTCURRENCYRATES")
     
-    df = Transformations(dataframe, country_list)
+    country_list = ["Netherlands", 'Poland', 'Italy', 'Sweden', 'United Kingdom']
+   
+    GDP_Data = Transformations(GDP, Currency, country_list)
 
-    df.show()
+    GDP_Data.show()
     
-    Write_df_to_SF(df , 'GDP_Data')
-
-
-
+    Write_df_to_SF(GDP_Data , 'GDP_Data')
