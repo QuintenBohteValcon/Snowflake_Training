@@ -15,8 +15,8 @@ type = external_stage -- type of integration
 storage_provider = azure -- provider of the storage
 enabled = true
 azure_tenant_id = '706234d5-b966-4413-9a48-d643f6e163b1'
-storage_allowed_locations = ('azure://snowflakedata1234.blob.core.windows.net/raw-sneaker-faqtory-data')
-SNOWFLAKE_BURST
+storage_allowed_locations = ('azure://snowflakedata1234.blob.core.windows.net/snowflake-data-academy')
+
 ;
 
 -- the location of the container within azure where our data is stored
@@ -30,8 +30,8 @@ desc integration azureblobstorage_integration; 
 -- Think of it as a bridge between Snowflake and the external data stored in the external storage. 
 
 create or replace stage azureblob
-url = 'azure://snowflakedata1234.blob.core.windows.net/raw-sneaker-faqtory-data' -- the location of the container within azure where our data is stored
-credentials=(azure_sas_token='?sv=2022-11-02&ss=bfqt&srt=co&sp=rwdlacupiytfx&se=2023-05-19T20:44:13Z&st=2023-05-19T12:44:13Z&spr=https&sig=EiCbWIo56y4bICU5JgiuGNsjEmIf7gcwfPScZedInQk%3D')
+url = 'azure://snowflakedata1234.blob.core.windows.net/snowflake-data-academy' -- the location of the container within azure where our data is stored
+credentials=(azure_sas_token='?sv=2022-11-02&ss=bfqt&srt=co&sp=rwdlacupiytfx&se=2023-06-06T19:14:29Z&st=2023-06-06T11:14:29Z&spr=https&sig=6uxfzhUHlGSqfattpUFzvC54%2F3WCGKxTrbY1EwSSoQQ%3D')
 -- SAS token, which are the credentials needed to connect to the azure container in the external storage. 
 ;
 
