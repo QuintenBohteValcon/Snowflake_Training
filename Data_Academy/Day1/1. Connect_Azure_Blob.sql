@@ -6,8 +6,8 @@
 -- The storage integration allows Snowflake to access and manage data stored in the external storage service as if it were stored in Snowflake. 
 
 
-create or replace database Snowflake_Burst;
-create or replace schema Raw_Data;
+create or replace database DATA_ACADEMY;
+create or replace schema SNEAKER_FAQTORY;
 
 
 create or replace storage integration azureblobstorage_integration
