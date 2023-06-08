@@ -64,13 +64,7 @@ ORDER BY StoreID, SalesYear
 
 
 -- Question 2.4
-
-select *
-from fact_returns
-where year(returndate) is null
-
-
-;
+-- some years can be null for returns
 WITH CTE1 AS
 (
 SELECT StoreID
