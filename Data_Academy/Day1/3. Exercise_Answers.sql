@@ -8,9 +8,27 @@ GROUP BY StoreID
 ORDER BY SUM(NetPrice) desc
 ;
 
-
 -- Question 2.2
--- With CTE??
+
+SELECT EMP.EMPLOYEEID
+    , EMP.FIRSTNAME
+    , EMP.LASTNAME
+    , EMP.EMAILADDRESS
+    , EMP.FUNCTION
+    , STO.STOREID
+    , STO.ADDRESS
+    , STO.STORENAME
+    , STO.COUNTRY
+    , STO.CHANNEL
+    
+FROM DIM_EMPLOYEE EMP
+LEFT JOIN DIM_STORE STO ON EMP.COUNTRYCODE = STO.COUNTRYCODE
+WHERE FIRSTNAME = 'Rutmer'
+    AND LASTNAME = 'Boels'
+
+
+-- Question 2.3
+
 WITH CTE1 AS
 (SELECT EmployeeID
 		, SUM(NetPrice) AS TotalSales
@@ -34,7 +52,7 @@ ORDER BY EMPLOYEEID asc
 ;
 
 
--- Question 2.3
+-- Question 2.4
 
 WITH CTE1 AS
 (
@@ -63,31 +81,6 @@ ORDER BY StoreID, SalesYear
 ;
 
 
--- Question 2.4
--- some years can be null for returns
-WITH CTE1 AS
-(
-SELECT StoreID
-		, YEAR(ReceivedDate)::varchar AS ReturnsYear
-        , SUM(ReturnAmount)::number(38,2) AS TotalReturnsCurrentYear
-FROM FACT_RETURNS
-GROUP BY StoreID, YEAR(ReceivedDate)
-ORDER BY StoreID, YEAR(ReceivedDate)
-),
-CTE2 AS
-(
-SELECT StoreID
-		, ReturnsYear
-        , TotalReturnsCurrentYear
-        , LAG(TotalReturnsCurrentYear) OVER(PARTITION BY StoreID ORDER BY ReturnsYear)::number(38,2) AS TotalReturnsPrevYear
-        
-FROM CTE1
-)
-SELECT *
-    , (((TotalReturnsCurrentYear - TotalReturnsPrevYear)/ TotalReturnsPrevYear) * 100)::number(38,2) AS ReturnsRatio
-FROM CTE2
-ORDER BY StoreID, ReturnsYear
-;
 
 
 -- Question 2.5
